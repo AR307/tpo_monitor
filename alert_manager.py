@@ -1,12 +1,10 @@
 """
-Alert Manager
+报警管理器 Alert Manager
 
-Handles all alert channels:
-- Console output
-- File logging
-- Webhook (optional)
-- Telegram (optional)
-- Discord (optional)
+提供多渠道报警功能:
+- Console输出
+- 文件日志
+- Telegram推送
 """
 
 import logging
@@ -37,13 +35,12 @@ class AlertManager:
         self.logger = utils.get_logger('alert_manager')
         self.config = config
         
-        # Channel configuration
+        # Channel configuration - 渠道配置
         self.channels = config['channels']
         self.console_config = config.get('console', {})
         self.file_config = config.get('file', {})
-        self.webhook_config = config.get('webhook', {})
         self.telegram_config = config.get('telegram', {})
-        self.discord_config = config.get('discord', {})
+
         
         # Throttling
         self.throttle_enabled = config.get('throttle', {}).get('enabled', True)
@@ -263,9 +260,17 @@ class AlertManager:
             self.logger.error(f"File alert error: {e}")
     
     def _send_telegram_alert(self, alert: Alert):
+        """通过Telegram发送报警"""
+        try:
+            message = f"🚨 *{alert.title}*\n\n{alert.message}\n\n⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            self._send_telegram_message(message)
+        except Exception as e:
+            self.logger.error(f"Telegram报警错误: {e}")
+    
+    def _send_telegram_message(self, message: str):
         """
-        通过Telegram发送报警
-        Send alert via Telegram
+        统一的Telegram消息发送方法
+        Unified Telegram message sending
         """
         try:
             bot_token = self.telegram_config.get('bot_token')
@@ -273,13 +278,6 @@ class AlertManager:
             
             if not bot_token or not chat_id:
                 return
-            
-            # 获取时间
-            from datetime import datetime
-            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            
-            # 格式化Telegram消息
-            message = f"🚨 *{alert.title}*\n\n{alert.message}\n\n⏰ {now}"
             
             url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
             payload = {
@@ -290,13 +288,12 @@ class AlertManager:
             
             response = requests.post(url, json=payload, timeout=10)
             
-            if response.status_code == 200:
-                self.logger.debug("Telegram报警发送成功")
-            else:
-                self.logger.warning(f"Telegram返回状态 {response.status_code}")
-        
+            if response.status_code != 200:
+                self.logger.warning(f"Telegram发送失败 {response.status_code}")
+                
         except Exception as e:
-            self.logger.error(f"Telegram报警错误: {e}")
+            self.logger.error(f"Telegram消息发送错误: {e}")
+
     
     def send_system_message(self, message: str, level: str = "INFO"):
         """
@@ -330,38 +327,6 @@ class AlertManager:
         
         # Telegram通知
         if self.channels.get('telegram', False):
-            try:
-                bot_token = self.telegram_config.get('bot_token')
-                chat_id = self.telegram_config.get('chat_id')
-                
-                if bot_token and chat_id:
-                    # 根据级别选择emoji
-                    emoji = "ℹ️"
-                    if level == "ERROR":
-                        emoji = "❌"
-                    elif level == "WARNING":
-                        emoji = "⚠️"
-                    
-                    # 获取当前时间
-                    from datetime import datetime
-                    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    
-                    # 格式化消息 (使用\n而不是\\n)
-                    telegram_message = f"{emoji} *系统消息*\n\n{message}\n\n⏰ {now}"
-                    
-                    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-                    payload = {
-                        'chat_id': chat_id,
-                        'text': telegram_message,
-                        'parse_mode': 'Markdown'
-                    }
-                    
-                    response = requests.post(url, json=payload, timeout=10)
-                    
-                    if response.status_code == 200:
-                        self.logger.debug(f"Telegram系统消息发送成功")
-                    else:
-                        self.logger.warning(f"Telegram发送失败 {response.status_code}")
-                        
-            except Exception as e:
-                self.logger.error(f"Telegram系统消息发送错误: {e}")
+            emoji = {"ERROR": "❌", "WARNING": "⚠️"}.get(level, "ℹ️")
+            telegram_message = f"{emoji} *系统消息*\n\n{message}\n\n⏰ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            self._send_telegram_message(telegram_message)
