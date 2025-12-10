@@ -1,0 +1,205 @@
+# TPO + VWAP + Order Flow Trading System Configuration
+
+# ========================================
+# Exchange Configuration
+# ========================================
+exchange:
+  name: "binance_futures"
+  symbols:
+    - "BTCUSDT"
+    - "ETHUSDT"
+  testnet: false  # Set to true for testing on Binance Testnet
+  
+  # WebSocket settings
+  websocket:
+    reconnect_delay: 5  # seconds
+    ping_interval: 30   # seconds
+    
+  # API rate limits (be careful not to exceed)
+  rate_limit:
+    requests_per_minute: 1200
+    orders_per_minute: 100
+
+# ========================================
+# TPO (Market Profile) Configuration
+# ========================================
+tpo:
+  # Session timing (UTC)
+  session_start: "00:00"
+  session_duration: 24  # hours (24h for crypto, 6.5h for stocks)
+  
+  # TPO period (how often to create a new TPO letter)
+  time_slice_minutes: 30  # 30-minute time slices (standard)
+  
+  # Value Area calculation
+  value_area_percent: 70  # 70% of volume defines value area
+  
+  # Structure detection thresholds
+  structure:
+    proximity_ticks: 5      # How close price needs to be to VAH/VAL/POC
+    wick_rejection_ratio: 2.0  # Wick length vs body for rejection detection
+    breakout_confirmation_bars: 2  # Bars needed to confirm breakout
+
+# ========================================
+# VWAP Configuration
+# ========================================
+vwap:
+  # Session reset time (UTC)
+  session_reset: "00:00"
+  
+  # Standard deviation bands
+  std_dev_bands: [1, 2]  # ±1σ and ±2σ
+  
+  # Trend analysis
+  slope_lookback_bars: 10  # How many bars to calculate slope
+  slope_threshold: 0.0001  # Minimum slope to consider trending
+  
+  # Pullback/rejection detection
+  pullback:
+    tolerance_percent: 0.15  # 0.15% from VWAP counts as "touch"
+    confirmation_bars: 2     # Bars needed to confirm bounce/rejection
+
+# ========================================
+# Order Flow Configuration
+# ========================================
+orderflow:
+  # Delta thresholds
+  delta:
+    significant_threshold: 500  # Minimum delta to be considered significant
+    consecutive_bars: 2         # Consecutive bars with same-direction delta
+    
+  # CVD (Cumulative Volume Delta)
+  cvd:
+    trend_lookback: 5           # Bars to determine CVD trend
+    divergence_threshold: 0.3   # Minimum divergence ratio
+    
+  # Open Interest
+  oi:
+    update_interval: 60         # Seconds between OI updates
+    significant_change_percent: 1.0  # 1% change is significant
+    
+  # Imbalance detection
+  imbalance:
+    ratio_threshold: 0.65       # Bid/Ask ratio > 0.65 = imbalance
+    volume_threshold: 200       # Minimum volume for imbalance to matter
+    
+  # Absorption detection
+  absorption:
+    volume_multiplier: 3.0      # Volume must be 3x average
+    price_move_tolerance: 0.05  # Max price move % to be "absorption"
+    lookback_bars: 20           # Calculate average volume over this period
+
+# ========================================
+# Signal Configuration
+# ========================================
+signals:
+  # Long entry conditions
+  long:
+    tpo_proximity_ticks: 5           # Distance from VAL/POC/VAH
+    vwap_pullback_tolerance: 0.15    # % distance from VWAP
+    require_all_orderflow: true      # Must have ALL orderflow confirmations
+    min_confidence: 0.7              # Minimum confidence score (0-1)
+    
+  # Short entry conditions
+  short:
+    tpo_proximity_ticks: 5
+    vwap_rejection_tolerance: 0.15
+    require_all_orderflow: true
+    min_confidence: 0.7
+    
+  # Failure pattern detection
+  failure:
+    delta_flip_confirmation_bars: 2  # Bars to confirm delta flip
+    cvd_divergence_bars: 5           # Lookback for CVD divergence
+    absorption_required: true        # Require absorption pattern
+    min_confidence: 0.8              # Higher threshold for failure patterns
+    
+  # Signal cooldown (prevent spam)
+  cooldown_seconds: 300  # 5 minutes between same signal type
+
+# ========================================
+# Alert Configuration
+# ========================================
+alerts:
+  enabled: true
+  
+  # Alert channels configuration - 报警渠道配置
+  channels:
+    console: true    # Console output - 控制台输出
+    file: true       # File logging - 文件日志
+    telegram: true   # Telegram bot - Telegram机器人 ✅ 已启用
+  
+  # Console alerts - 控制台报警
+  console:
+    colored_output: true  # Use colors - 使用彩色输出
+    verbose: true         # Show detailed info - 显示详细信息
+  
+  # File alerts - 文件报警
+  file:
+    path: "logs/signals.log"  # Signal log file path - 信号日志文件路径
+    
+  # Telegram (optional) - Telegram(可选)
+  telegram:
+    bot_token: "8583262895:AAH-VHocOxBkbMTozRDajmFW_Tlv0B39IKo"  # Your bot token from @BotFather
+    chat_id: "-5087018570"    # Your chat ID
+    
+  # Alert throttling
+  throttle:
+    enabled: true
+    duplicate_window_seconds: 300  # Don't repeat same alert within 5 min
+    max_alerts_per_hour: 20        # Maximum alerts per hour
+
+# ========================================
+# Data Collection & Storage
+# ========================================
+data:
+  # Historical data for warmup
+  warmup_bars: 100  # Load this many bars on startup
+  
+  # Data retention
+  retention:
+    tpo_sessions: 3      # Keep last 3 TPO sessions
+    vwap_sessions: 2     # Keep last 2 VWAP sessions
+    orderflow_minutes: 60  # Keep 60 minutes of orderflow data
+    
+  # Footprint data (order book levels)
+  footprint:
+    depth_levels: 20     # Track top 20 bid/ask levels
+    update_speed: 100    # Update every 100ms (binance supports 100ms)
+
+# ========================================
+# Logging & Debugging
+# ========================================
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  
+  # Component-specific logging
+  components:
+    data_feed: "INFO"
+    tpo_analyzer: "INFO"
+    vwap_calculator: "INFO"
+    orderflow_analyzer: "DEBUG"  # More verbose for complex component
+    signal_engine: "INFO"
+    alert_manager: "INFO"
+    
+  # Log files
+  files:
+    main: "logs/system.log"
+    errors: "logs/errors.log"
+    trades: "logs/trades.log"
+
+# ========================================
+# Performance & Optimization
+# ========================================
+performance:
+  # Threading
+  use_threading: true
+  worker_threads: 4
+  
+  # Memory management
+  max_memory_mb: 500
+  gc_interval_seconds: 300  # Run garbage collection every 5 min
+  
+  # Processing
+  batch_size: 100          # Process trades in batches
+  update_interval_ms: 100  # Update indicators every 100ms
