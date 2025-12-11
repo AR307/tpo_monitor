@@ -130,11 +130,13 @@ alerts:
     telegram: true
 ```
 
-获取 `chat_id`:
-1. 向机器人发送一条消息
-2. 访问: `https://api.telegram.org/bot8583262895:AAH-VHocOxBkbMTozRDajmFW_Tlv0B39IKo/getUpdates`
-3. 找到 `"chat":{"id":123456789}` 中的数字
-
+获取   ```
+   # 替换YOUR_BOT_TOKEN为实际Token
+   import requests
+   url = "https://api.telegram.org/botYOUR_BOT_TOKEN/getUpdates"
+   response = requests.get(url)
+   print(response.json())
+   ```
 ---
 
 ## 🔧 常见问题

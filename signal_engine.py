@@ -208,17 +208,30 @@ class SignalEngine:
         
         if require_all_of:
             if of_conditions_met < of_conditions_total:
+                self.logger.debug(
+                    f"Long OF failed: {of_conditions_met}/{of_conditions_total} conditions met "
+                    f"(Delta:{conditions.delta_confirmed}, CVD:{conditions.cvd_confirmed}, "
+                    f"OI:{conditions.oi_confirmed}, Flow:{conditions.aggressive_flow})"
+                )
                 return None  # All OF conditions required
             confidence += of_score
         else:
             # At least 3 out of 4
             if of_conditions_met < 3:
+                self.logger.debug(
+                    f"Long OF failed: {of_conditions_met}/4 conditions met (need 3+) "
+                    f"(Delta:{conditions.delta_confirmed}, CVD:{conditions.cvd_confirmed}, "
+                    f"OI:{conditions.oi_confirmed}, Flow:{conditions.aggressive_flow})"
+                )
                 return None
             confidence += of_score
         
         # Check minimum confidence
         if confidence < self.long_config['min_confidence']:
-            self.logger.debug(f"Long signal below confidence threshold: {confidence:.2f}")
+            self.logger.debug(
+                f"Long signal检测到但置信度不足: {confidence:.2f} < {self.long_config['min_confidence']} "
+                f"(TPO:{tpo_valid}, VWAP:{vwap_valid}, OF:{of_conditions_met}/4)"
+            )
             return None
         
         # ===== GENERATE SIGNAL =====

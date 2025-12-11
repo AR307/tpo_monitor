@@ -97,22 +97,22 @@ signals:
   long:
     tpo_proximity_ticks: 5           # Distance from VAL/POC/VAH
     vwap_pullback_tolerance: 0.15    # % distance from VWAP
-    require_all_orderflow: true      # Must have ALL orderflow confirmations
-    min_confidence: 0.7              # Minimum confidence score (0-1)
+    require_all_orderflow: false     # ✅ 满足3/4个订单流条件即可 (原: true)
+    min_confidence: 0.5              # ✅ 最低50%置信度 (原: 0.7)
     
   # Short entry conditions
   short:
     tpo_proximity_ticks: 5
     vwap_rejection_tolerance: 0.15
-    require_all_orderflow: true
-    min_confidence: 0.7
+    require_all_orderflow: false     # ✅ 满足3/4个订单流条件即可 (原: true)
+    min_confidence: 0.5              # ✅ 最低50%置信度 (原: 0.7)
     
   # Failure pattern detection
   failure:
     delta_flip_confirmation_bars: 2  # Bars to confirm delta flip
     cvd_divergence_bars: 5           # Lookback for CVD divergence
-    absorption_required: true        # Require absorption pattern
-    min_confidence: 0.8              # Higher threshold for failure patterns
+    absorption_required: false       # ✅ 不强制要求absorption (原: true)
+    min_confidence: 0.6              # ✅ 降低到60% (原: 0.8)
     
   # Signal cooldown (prevent spam)
   cooldown_seconds: 300  # 5 minutes between same signal type
@@ -140,8 +140,8 @@ alerts:
     
   # Telegram (optional) - Telegram(可选)
   telegram:
-    bot_token: "8583262895:AAH-VHocOxBkbMTozRDajmFW_Tlv0B39IKo"  # Your bot token from @BotFather
-    chat_id: "-5087018570"    # Your chat ID
+    bot_token: "YOUR_BOT_TOKEN_HERE"  # Get from @BotFather - 从@BotFather获取
+    chat_id: "YOUR_CHAT_ID_HERE"       # Get from @userinfobot - 从@userinfobot获取
     
   # Alert throttling
   throttle:
@@ -179,7 +179,7 @@ logging:
     tpo_analyzer: "INFO"
     vwap_calculator: "INFO"
     orderflow_analyzer: "DEBUG"  # More verbose for complex component
-    signal_engine: "INFO"
+    signal_engine: "DEBUG"       # ✅ 启用DEBUG查看信号检测详情 (原: INFO)
     alert_manager: "INFO"
     
   # Log files

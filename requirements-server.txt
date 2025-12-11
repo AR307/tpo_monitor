@@ -1,0 +1,25 @@
+# ========================================
+# 服务器部署版本 - 兼容旧版本 Python
+# Core dependencies - 核心依赖
+# WebSocket and Exchange API
+python-binance>=1.0.17
+websocket-client>=1.0.0,<2.0.0  # 降低版本要求以兼容旧 pip
+requests>=2.25.0
+
+# Configuration
+pyyaml>=5.4
+
+# Async Support
+aiohttp>=3.7.0
+
+# ========================================
+# Logging & Monitoring
+# ========================================
+colorama>=0.4.4  # Colored console output
+python-dateutil>=2.8.0
+
+# ========================================
+# Utilities
+# ========================================
+python-dotenv>=0.19.0  # For .env file support (API keys)
+tabulate>=0.8.9  # Pretty table printing
