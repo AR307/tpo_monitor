@@ -196,10 +196,10 @@ class AlertManager:
         signal_dict = signal.to_dict()
         
         lines = [
-            f"Signal: {signal_dict['signal_type']}",
+            f"Signal: {signal_dict['signal_type'].replace('_', ' ')}",
             f"Symbol: {signal_dict['symbol']}",
             f"Price: ${signal_dict['price']:,.2f}",
-            f"Time: {signal_dict['timestamp']}",
+            f"Time: {signal_dict['timestamp'][:19].replace('T', ' ')}",
             f"Confidence: {signal_dict['confidence']*100:.0f}%",
             "",
             "Conditions:",
@@ -230,7 +230,7 @@ class AlertManager:
             lines.append(f"  VWAP: ${ctx['vwap']:,.2f}")
         if ctx['delta'] is not None:
             lines.append(f"  Delta: {ctx['delta']:,.0f} | CVD: {ctx['cvd']:,.0f}")
-        if ctx['oi_change']:
+        if ctx['oi_change'] is not None and ctx['oi_change'] != "0.00%":
             lines.append(f"  OI Change: {ctx['oi_change']}")
         
         return "\n".join(lines)

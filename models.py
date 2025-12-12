@@ -329,7 +329,9 @@ class SignalEvent:
     
     @property
     def datetime(self) -> datetime:
-        return datetime.fromtimestamp(self.timestamp / 1000)
+        """返回本地时间（UTC+8）"""
+        from datetime import timedelta
+        return datetime.fromtimestamp(self.timestamp / 1000) + timedelta(hours=8)
     
     def to_dict(self) -> dict:
         """Convert to dictionary for logging/alerts"""
