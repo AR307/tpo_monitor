@@ -269,6 +269,8 @@ class TradingSystem:
             self.logger.error(f"处理{symbol}的K线时出错: {e}", exc_info=True)
     
     def _on_trade(self, symbol: str, trade, delta: float, cvd: float):
+        print(f"Passing to OrderFlowAnalyzer: trade={trade}, delta={delta}, cvd={cvd}")
+        print(f"_on_trade called: symbol={symbol}, delta={delta}, cvd={cvd}")
         """
         处理交易更新
         
@@ -281,7 +283,9 @@ class TradingSystem:
         try:
             # 使用订单流分析器更新交易
             # (交易已聚合;我们会在K线收盘时处理)
-            pass
+            # 传递交易到OrderFlow分析器
+            if symbol in self.orderflow_analyzers:
+                self.orderflow_analyzers[symbol].update_from_trades([trade])
         except Exception as e:
             self.logger.error(f"处理{symbol}的交易时出错: {e}")
     

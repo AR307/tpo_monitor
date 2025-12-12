@@ -12,7 +12,7 @@ import time
 from typing import Dict, List, Callable, Optional
 from collections import deque
 import websocket
-from binance.client import Client
+import requests
 
 from models import Trade, OrderBookSnapshot, OrderBookLevel
 import utils
@@ -28,9 +28,6 @@ class BinanceDataFeed:
         self.logger = utils.get_logger('data_feed')
         self.symbol = symbol.upper()
         self.config = config
-        
-        # Binance REST client
-        self.client = Client()
         
         # WebSocket
         self.ws = None
@@ -250,13 +247,17 @@ class BinanceDataFeed:
     
     # 历史数据
     def get_historical_klines(self, interval: str = '1m', limit: int = 100) -> List[dict]:
-        """获取历史K线"""
+        """获取历史K线 - 直接调用Binance API"""
         try:
-            klines = self.client.futures_klines(
-                symbol=self.symbol,
-                interval=interval,
-                limit=limit
-            )
+            url = "https://fapi.binance.com/fapi/v1/klines"
+            params = {
+                'symbol': self.symbol,
+                'interval': interval,
+                'limit': limit
+            }
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            klines = response.json()
             
             candles = []
             for k in klines:
@@ -273,7 +274,7 @@ class BinanceDataFeed:
             return candles
             
         except Exception as e:
-            self.logger.error(f"获取历史K线错误: {e}")
+            self.logger.error(f"获取历史K线失败: {e}")
             return []
 
 

@@ -140,8 +140,8 @@ alerts:
     
   # Telegram (optional) - Telegram(可选)
   telegram:
-    bot_token: "YOUR_BOT_TOKEN_HERE"  # Get from @BotFather - 从@BotFather获取
-    chat_id: "YOUR_CHAT_ID_HERE"       # Get from @userinfobot - 从@userinfobot获取
+    bot_token: "8583262895:AAEOu26dAHRGi9rrLk_UndA4GBqllW-hLrQ"  # Get from @BotFather - 从@BotFather获取
+    chat_id: "-5087018570"       # Get from @userinfobot - 从@userinfobot获取
     
   # Alert throttling
   throttle:
