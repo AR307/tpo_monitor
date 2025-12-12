@@ -195,8 +195,19 @@ class AlertManager:
         """Format detailed alert message"""
         signal_dict = signal.to_dict()
         
+        # 信号类型中文化和方向说明
+        signal_type = signal_dict['signal_type']
+        signal_names = {
+            'LONG_ENTRY': ('做多入场', '📈 看涨'),
+            'SHORT_ENTRY': ('做空入场', '📉 看跌'),
+            'LONG_FAILURE': ('空头陷阱反转', '📈 看涨'),  # 多头失败实际是空头陷阱，做多
+            'SHORT_FAILURE': ('多头陷阱反转', '📉 看跌'),  # 空头失败实际是多头陷阱，做空
+        }
+        
+        cn_name, direction = signal_names.get(signal_type, (signal_type, ''))
+        
         lines = [
-            f"Signal: {signal_dict['signal_type'].replace('_', ' ')}",
+            f"信号: {cn_name} {direction}",
             f"Symbol: {signal_dict['symbol']}",
             f"Price: ${signal_dict['price']:,.2f}",
             f"Time: {signal_dict['timestamp'][:19].replace('T', ' ')}",

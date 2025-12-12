@@ -54,16 +54,18 @@ class BinanceDataFeed:
         self.logger.info(f"DataFeed initialized for {self.symbol}")
     
     def start(self):
-        """启动数据源"""
-        if self.is_running:
+        """启动WebSocket连接"""
+        if self.ws:
             return
         
-        self.is_running = True
-        self.logger.info(f"Starting DataFeed for {self.symbol}")
-        
-        # 构建WebSocket URL
-        symbol_lower = self.symbol.lower()
-        url = f"wss://fstream.binance.com/stream?streams={symbol_lower}@aggTrade/{symbol_lower}@kline_1m/{symbol_lower}@ticker"
+        # 构建WebSocket URL (Combined streams)
+        streams = [
+            f"{self.symbol.lower()}@aggTrade",
+            f"{self.symbol.lower()}@kline_1m",
+            f"{self.symbol.lower()}@ticker"
+        ]
+        stream_query = "/".join(streams)
+        url = f"wss://fstream.binance.com/stream?streams={stream_query}"
         
         self.logger.info(f"连接到: {url}")
         
@@ -76,12 +78,28 @@ class BinanceDataFeed:
             on_open=self._on_ws_open
         )
         
-        # 在新线程运行
+        # 在新线程运行WebSocket
         def run_ws():
             self.ws.run_forever()
         
         self.ws_thread = threading.Thread(target=run_ws, daemon=True)
         self.ws_thread.start()
+        
+        # 启动OI定期获取线程（每30秒）
+        def update_oi_periodically():
+            while self.ws:
+                try:
+                    oi = self._fetch_open_interest()
+                    if oi is not None:
+                        self.previous_oi = self.current_oi
+                        self.current_oi = oi
+                        self.logger.debug(f"OI更新: {oi:.2f} (变化: {self.get_oi_change():.2f}%)")
+                except Exception as e:
+                    self.logger.debug(f"OI获取失败: {e}")
+                time.sleep(30)  # 每30秒更新一次
+        
+        oi_thread = threading.Thread(target=update_oi_periodically, daemon=True)
+        oi_thread.start()
         
         self.logger.info("✓ DataFeed启动成功")
     
@@ -276,6 +294,19 @@ class BinanceDataFeed:
         except Exception as e:
             self.logger.error(f"获取历史K线失败: {e}")
             return []
+    
+    def _fetch_open_interest(self) -> Optional[float]:
+        """获取持仓量 - 直接调用Binance API"""
+        try:
+            url = "https://fapi.binance.com/fapi/v1/openInterest"
+            params = {'symbol': self.symbol}
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            return float(data['openInterest'])
+        except Exception as e:
+            self.logger.debug(f"获取OI失败: {e}")
+            return None
 
 
 # 多币种管理器
