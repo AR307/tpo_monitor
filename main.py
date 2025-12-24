@@ -261,9 +261,15 @@ class TradingSystem:
                 orderflow_data=orderflow_data
             )
             
+            # DEBUG: 记录信号检测结果
+            if signal:
+                self.logger.info(f"✅ Signal detected: {signal.signal_type.value} for {symbol} @ ${signal.price:.2f}")
+            
             # 如果检测到信号则发送报警
             if signal:
+                self.logger.info(f"📤 Sending signal alert...")
                 self.alert_manager.send_signal_alert(signal)
+                self.logger.info(f"✓ Signal alert sent")
         
         except Exception as e:
             self.logger.error(f"处理{symbol}的K线时出错: {e}", exc_info=True)

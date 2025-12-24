@@ -293,14 +293,14 @@ class AlertManager:
             url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
             payload = {
                 'chat_id': chat_id,
-                'text': message,
-                'parse_mode': 'Markdown'
+                'text': message
+                # 去掉parse_mode避免Markdown特殊字符导致400错误
             }
             
             response = requests.post(url, json=payload, timeout=10)
             
             if response.status_code != 200:
-                self.logger.warning(f"Telegram发送失败 {response.status_code}")
+                self.logger.warning(f"Telegram发送失败 {response.status_code}: {response.text}")
                 
         except Exception as e:
             self.logger.error(f"Telegram消息发送错误: {e}")
